@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 
 interface ProductPageProps {
   params: {
@@ -9,44 +10,59 @@ interface ProductPageProps {
   };
 }
 
-const products: Record<string, { name: string; description: string; price: string; image: string }> = {
-  '1': {
-    name: 'Next.js Hoodie',
-    description: 'Hoodie keren untuk para developer Next.js!',
-    price: 'Rp 250.000',
-    image: 'https://plus.unsplash.com/premium_photo-1673356302169-574db56b52cd?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=800',
-  },
-  '2': {
-    name: 'React Mug',
-    description: 'Mug stylish untuk pecinta React.',
-    price: 'Rp 75.000',
-    image: 'https://images.unsplash.com/photo-1542556398-95fb5b9f9b48?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=800',
-  },
+// Tipe data untuk produk
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  image: string;
+}
+
+// Fungsi untuk mengambil data produk dari API
+const getProductById = async (id: string): Promise<Product | undefined> => {
+  try {
+    // Panggil API dengan ID di query parameter
+    const res = await fetch(`http://localhost:3000/api/products?id=${id}`);
+    if (!res.ok) {
+      console.error('Failed to fetch product:', res.status, res.statusText);
+      return undefined;
+    }
+    const product = await res.json();
+    return product;
+  } catch (error) {
+    console.error('Failed to fetch product:', error);
+    return undefined;
+  }
 };
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = products[params.id];
+export default async function ProductPage({ params }: ProductPageProps) {
+  // Ambil data produk di sisi server menggunakan ID dari URL
+  const product = await getProductById(params.id);
 
+  // Jika produk tidak ditemukan, tampilkan halaman 404
   if (!product) {
     notFound();
   }
 
   return (
     <main className="p-10 flex flex-col items-center text-center">
-      <img
-        src={product.image}
+      <Image
+        src={product.image || 'https://via.placeholder.com/400'}
         alt={product.name}
+        width={400}
+        height={300}
         className="w-full max-w-md h-[300px] object-cover rounded shadow mb-6"
       />
       <h1 className="text-3xl font-bold text-indigo-700">{product.name}</h1>
       <p className="mt-4 text-gray-600">{product.description}</p>
-      <p className="mt-2 font-semibold">Harga: {product.price}</p>
+      <p className="mt-2 font-semibold">Harga: Rp{product.price.toLocaleString()}</p>
 
       <Link
-        href="/"
+        href="/products"
         className="mt-6 inline-block bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition"
       >
-        Kembali ke Beranda
+        Kembali ke Daftar Produk
       </Link>
     </main>
   );

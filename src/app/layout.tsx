@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white text-gray-900`}>
         <nav className="flex justify-center gap-6 bg-gray-800 text-white py-4 shadow-md">
           <Link href="/" className="hover:text-yellow-300 transition-colors">
-           Home
+            Home
           </Link>
           <Link href="/about" className="hover:text-yellow-300 transition-colors">
             About
@@ -29,7 +29,9 @@ export default function RootLayout({
           <Link href="/contact" className="hover:text-yellow-300 transition-colors">
             Contact
           </Link>
-         
+          <Link href="/products" className="hover:text-yellow-300 transition-colors">
+            Products
+          </Link>
         </nav>
         <main className="max-w-4xl mx-auto p-6">{children}</main>
       </body>
