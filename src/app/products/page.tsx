@@ -1,166 +1,167 @@
+// File: src/app/products/page.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
-// Tipe data untuk produk
+// Tipe data untuk produk harus sesuai dengan skema database
 interface Product {
   id: string;
   name: string;
   price: number;
-  image: string; // Tambahkan properti image
+  description: string;
+  image: string;
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [name, setName] = useState('');
   const [price, setPrice] = useState(0);
-  const [image, setImage] = useState(''); // State baru untuk URL gambar
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  // Fungsi untuk mengambil semua data produk (READ)
   const fetchProducts = async () => {
-    const res = await fetch('/api/products');
+    const res = await fetch('/api/products', { cache: 'no-store' });
     const data = await res.json();
     setProducts(data);
   };
 
-  // Fungsi untuk menambahkan produk baru (CREATE)
   const handleAddProduct = async () => {
-    if (!name || price <= 0 || !image) return;
-    const res = await fetch('/api/products', {
+    if (!name || price <= 0) return;
+    await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, price, image }), // Kirim data gambar
+      body: JSON.stringify({ name, price, description, image }),
     });
-    if (res.ok) {
-      await fetchProducts(); // Ambil data terbaru
-      setName('');
-      setPrice(0);
-      setImage(''); // Reset state gambar
-    }
+    await fetchProducts();
+    setName('');
+    setPrice(0);
+    setDescription('');
+    setImage('');
   };
 
-  // Fungsi untuk mengupdate produk (UPDATE)
   const handleUpdateProduct = async () => {
-    if (!editingProduct || !name || price <= 0 || !image) return;
-    const res = await fetch('/api/products', {
+    if (!editingProduct) return;
+    await fetch('/api/products', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editingProduct.id, name, price, image }), // Kirim data gambar
+      body: JSON.stringify({ id: editingProduct.id, name, price, description, image }),
     });
-    if (res.ok) {
-      await fetchProducts(); // Ambil data terbaru
-      setName('');
-      setPrice(0);
-      setImage(''); // Reset state gambar
-      setEditingProduct(null); // Keluar dari mode edit
-    }
+    await fetchProducts();
+    setName('');
+    setPrice(0);
+    setDescription('');
+    setImage('');
+    setEditingProduct(null);
   };
 
-  // Fungsi untuk menghapus produk (DELETE)
   const handleDeleteProduct = async (id: string) => {
-    const res = await fetch(`/api/products?id=${id}`, {
+    await fetch(`/api/products?id=${id}`, {
       method: 'DELETE',
     });
-    if (res.ok) {
-      await fetchProducts(); // Ambil data terbaru
-    }
+    await fetchProducts();
   };
 
-  // Set state untuk mode edit
   const startEditing = (product: Product) => {
     setEditingProduct(product);
     setName(product.name);
     setPrice(product.price);
-    setImage(product.image); // Set state gambar untuk mode edit
+    setDescription(product.description);
+    setImage(product.image);
   };
 
-  // Memuat data saat halaman pertama kali dirender
   useEffect(() => {
     fetchProducts();
   }, []);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
-      <h1>Manajemen Produk</h1>
+    <div className="p-10 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-center">Manajemen Produk</h1>
 
-      {/* Form untuk Tambah / Edit Produk */}
-      <div style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '20px', borderRadius: '8px' }}>
-        <h2>{editingProduct ? 'Edit Produk' : 'Tambah Produk Baru'}</h2>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="name" style={{ display: 'block', marginBottom: '5px' }}>Nama:</label>
+      {/* Form Tambah/Edit */}
+      <div className="bg-gray-100 p-6 rounded-lg shadow-md mb-8">
+        <h2 className="text-2xl font-semibold mb-4">{editingProduct ? 'Edit Produk' : 'Tambah Produk Baru'}</h2>
+        <div className="space-y-4">
           <input
-            id="name"
             type="text"
+            placeholder="Nama Produk"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            className="w-full p-2 border border-gray-300 rounded"
           />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="price" style={{ display: 'block', marginBottom: '5px' }}>Harga:</label>
           <input
-            id="price"
             type="number"
+            placeholder="Harga"
             value={price}
             onChange={(e) => setPrice(Number(e.target.value))}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            className="w-full p-2 border border-gray-300 rounded"
           />
-        </div>
-        <div style={{ marginBottom: '10px' }}>
-          <label htmlFor="image" style={{ display: 'block', marginBottom: '5px' }}>URL Gambar:</label>
+          <textarea
+            placeholder="Deskripsi"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+          />
           <input
-            id="image"
             type="text"
+            placeholder="URL Gambar"
             value={image}
             onChange={(e) => setImage(e.target.value)}
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            className="w-full p-2 border border-gray-300 rounded"
           />
         </div>
-        <button onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
-          style={{ padding: '10px 15px', backgroundColor: editingProduct ? '#ffc107' : '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          {editingProduct ? 'Simpan Perubahan' : 'Tambah Produk'}
-        </button>
-        {editingProduct && (
-          <button onClick={() => { setEditingProduct(null); setName(''); setPrice(0); setImage(''); }}
-            style={{ padding: '10px 15px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginLeft: '10px' }}>
-            Batal
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
+          >
+            {editingProduct ? 'Simpan Perubahan' : 'Tambah Produk'}
           </button>
-        )}
+          {editingProduct && (
+            <button
+              onClick={() => { setEditingProduct(null); setName(''); setPrice(0); setDescription(''); setImage(''); }}
+              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition"
+            >
+              Batal
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Menampilkan List Produk */}
-      <div>
-        <h2>Daftar Produk</h2>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {products.map((product) => (
-            <li key={product.id} style={{ border: '1px solid #ddd', padding: '10px', marginBottom: '10px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-                <Image 
-                    src={product.image || 'https://via.placeholder.com/64'} // Placeholder jika gambar kosong
-                    alt={product.name}
-                    width={64}
-                    height={64}
-                    style={{ objectFit: 'cover', borderRadius: '4px', marginRight: '15px' }}
-                />
-                <div>
-                  <strong>{product.name}</strong> - Rp{product.price.toLocaleString()}
-                </div>
-              </div>
+      {/* Daftar Produk */}
+      <div className="space-y-4">
+        {products.map((product) => (
+          <div key={product.id} className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex items-center gap-4">
+              <Image
+                src={product.image || 'https://via.placeholder.com/64'}
+                alt={product.name}
+                width={64}
+                height={64}
+                className="object-cover rounded-md"
+              />
               <div>
-                <button onClick={() => startEditing(product)}
-                  style={{ padding: '5px 10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginRight: '5px' }}>
-                  Edit
-                </button>
-                <button onClick={() => handleDeleteProduct(product.id)}
-                  style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                  Hapus
-                </button>
+                <h3 className="text-lg font-semibold">{product.name}</h3>
+                <p className="text-gray-600">Rp{product.price.toLocaleString()}</p>
               </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => startEditing(product)}
+                className="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600 transition"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(product.id)}
+                className="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition"
+              >
+                Hapus
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

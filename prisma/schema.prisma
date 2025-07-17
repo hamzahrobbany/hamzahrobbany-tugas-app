@@ -1,0 +1,25 @@
+// File: prisma/schema.prisma
+
+// Generator ini memberitahu Prisma untuk membuat Prisma Client,
+// yang merupakan library untuk berinteraksi dengan database.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Datasource ini mendefinisikan koneksi ke database Anda.
+// 'provider' menentukan jenis database (postgresql, mysql, sqlite, dll).
+// 'url' mengambil string koneksi dari environment variable.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Model ini merepresentasikan tabel 'Product' di database Anda.
+// Setiap properti akan menjadi kolom di tabel tersebut.
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  price       Int
+  description String?  // Tanda tanya (?) berarti kolom ini opsional
+  image       String?  // Tanda tanya (?) berarti kolom ini opsional
+}
